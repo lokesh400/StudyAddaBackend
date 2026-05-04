@@ -1,0 +1,135 @@
+<%- include('../partials/header') %>
+<main class="container">
+<h1>Academic Structure + Materials</h1>
+<section class="grid-2">
+  <div class="panel"><h3>Add Department</h3><form method="POST" action="/admin/departments"><input name="name" placeholder="Engineering" required/><button>Add</button></form></div>
+  <div class="panel"><h3>Add Branch</h3><form method="POST" action="/admin/branches"><input name="name" placeholder="ECE" required/><select name="department" required><% departments.forEach(d=>{ %><option value="<%= d._id %>"><%= d.name %></option><% }) %></select><button>Add</button></form></div>
+  <div class="panel"><h3>Add Semester</h3><form method="POST" action="/admin/semesters"><input name="name" placeholder="Semester 1" required/><input name="number" type="number" min="1" max="20" required/><select name="branch" required><% branches.forEach(b=>{ %><option value="<%= b._id %>"><%= b.name %></option><% }) %></select><button>Add</button></form></div>
+  <div class="panel"><h3>Add Subject</h3><form method="POST" action="/admin/subjects"><input name="name" placeholder="Signals & Systems" required/><input name="code" placeholder="ECE201"/><select name="semester" required><% semesters.forEach(s=>{ %><option value="<%= s._id %>"><%= s.name %> - <%= s.branch?.name %></option><% }) %></select><button>Add</button></form></div>
+</section>
+
+<section class="panel"><h3>Upload PDF</h3><form method="POST" action="/admin/materials" enctype="multipart/form-data"><input name="title" placeholder="Module 1 Notes" required/><select name="branch" required><% branches.forEach(b=>{ %><option value="<%= b._id %>"><%= b.name %></option><% }) %></select><select name="semester" required><% semesters.forEach(s=>{ %><option value="<%= s._id %>"><%= s.name %></option><% }) %></select><select name="subject" required><% subjects.forEach(s=>{ %><option value="<%= s._id %>"><%= s.name %></option><% }) %></select><input type="file" name="pdf" accept="application/pdf" required/><button>Upload</button></form></section>
+
+<section class="panel"><h3>Materials</h3><ul><% materials.forEach(m=>{ %><li><%= m.title %> - <%= m.subject?.name %> <form action="/admin/materials/<%= m._id %>?_method=DELETE" method="POST" style="display:inline"><button>Delete</button></form></li><% }) %></ul></section>
+
+<section class="panel"><h3>Departments</h3>
+  <table class="admin-table">
+    <thead><tr><th>Name</th><th>Actions</th></tr></thead>
+    <tbody>
+      <% departments.forEach(d=>{ %>
+      <tr>
+        <td>
+          <form action="/admin/departments/<%= d._id %>?_method=PUT" method="POST" style="display:inline">
+            <input name="name" value="<%= d.name %>" required />
+            <button type="submit">Save</button>
+          </form>
+        </td>
+        <td>
+          <form action="/admin/departments/<%= d._id %>?_method=DELETE" method="POST" style="display:inline">
+            <button onclick="return confirm('Delete department?')">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel"><h3>Branches</h3>
+  <table class="admin-table">
+    <thead><tr><th>Name</th><th>Department</th><th>Actions</th></tr></thead>
+    <tbody>
+      <% branches.forEach(b=>{ %>
+      <tr>
+        <td>
+          <form action="/admin/branches/<%= b._id %>?_method=PUT" method="POST" style="display:inline">
+            <input name="name" value="<%= b.name %>" required />
+        </td>
+        <td>
+            <select name="department" required>
+              <% departments.forEach(d=>{ %>
+                <option value="<%= d._id %>" <%= (b.department && (b.department.toString ? b.department.toString() : b.department._id.toString()) === d._id.toString()) ? 'selected' : '' %>><%= d.name %></option>
+              <% }) %>
+            </select>
+        </td>
+        <td>
+            <button type="submit">Save</button>
+          </form>
+          <form action="/admin/branches/<%= b._id %>?_method=DELETE" method="POST" style="display:inline">
+            <button onclick="return confirm('Delete branch?')">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel"><h3>Semesters</h3>
+  <table class="admin-table">
+    <thead><tr><th>Name</th><th>Number</th><th>Branch</th><th>Actions</th></tr></thead>
+    <tbody>
+      <% semesters.forEach(s=>{ %>
+      <tr>
+        <td>
+          <form action="/admin/semesters/<%= s._id %>?_method=PUT" method="POST" style="display:inline">
+            <input name="name" value="<%= s.name %>" required />
+        </td>
+        <td>
+            <input name="number" type="number" min="1" value="<%= s.number %>" required />
+        </td>
+        <td>
+            <select name="branch" required>
+              <% branches.forEach(b=>{ %>
+                <option value="<%= b._id %>" <%= (s.branch && (s.branch.toString ? s.branch.toString() : s.branch._id.toString()) === b._id.toString()) ? 'selected' : '' %>><%= b.name %></option>
+              <% }) %>
+            </select>
+        </td>
+        <td>
+            <button type="submit">Save</button>
+          </form>
+          <form action="/admin/semesters/<%= s._id %>?_method=DELETE" method="POST" style="display:inline">
+            <button onclick="return confirm('Delete semester?')">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel"><h3>Subjects</h3>
+  <table class="admin-table">
+    <thead><tr><th>Name</th><th>Code</th><th>Semester</th><th>Actions</th></tr></thead>
+    <tbody>
+      <% subjects.forEach(sub=>{ %>
+      <tr>
+        <td>
+          <form action="/admin/subjects/<%= sub._id %>?_method=PUT" method="POST" style="display:inline">
+            <input name="name" value="<%= sub.name %>" required />
+        </td>
+        <td>
+            <input name="code" value="<%= sub.code || '' %>" />
+        </td>
+        <td>
+            <select name="semester" required>
+              <% semesters.forEach(s=>{ %>
+                <option value="<%= s._id %>" <%= (sub.semester && (sub.semester.toString ? sub.semester.toString() : sub.semester._id.toString()) === s._id.toString()) ? 'selected' : '' %>><%= s.name %> - <%= s.branch?.name %></option>
+              <% }) %>
+            </select>
+        </td>
+        <td>
+            <button type="submit">Save</button>
+          </form>
+          <form action="/admin/subjects/<%= sub._id %>?_method=DELETE" method="POST" style="display:inline">
+            <button onclick="return confirm('Delete subject?')">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+
+</main>
+<%- include('../partials/footer') %>

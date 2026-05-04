@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyAdda</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="/materials">StudyAdda</a>
+    <div>
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+        <a href="/favorites">Favorites</a>
+        <% if (currentUser.role === 'admin') { %><a href="/admin/materials">Admin</a><% } %>
+        <form action="/logout" method="POST" style="display:inline;"><button>Logout</button></form>
+      <% } else { %>
+        <a href="/login">Login</a>
+      <% } %>
+    </div>
+  </nav>
+  <% if (typeof success !== 'undefined' && success && success.length) { %><p class="flash success"><%= success[0] %></p><% } %>
+  <% if (typeof error !== 'undefined' && error && error.length) { %><p class="flash error"><%= error[0] %></p><% } %>

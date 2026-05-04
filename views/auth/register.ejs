@@ -1,0 +1,17 @@
+<%- include('../partials/header') %>
+<main class="container">
+  <div class="panel" style="max-width:520px;margin:28px auto;padding:28px;text-align:left">
+    <h2 style="margin-top:0">Create your StudyAdda account</h2>
+    <form method="POST" action="/register">
+      <label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">Email</label>
+      <input type="email" name="email" placeholder="you@example.com" required />
+      <label style="font-size:12px;color:var(--muted);margin:12px 0 6px;display:block">Password</label>
+      <input type="password" name="password" placeholder="Choose a password" required />
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn" type="submit">Create Account</button>
+        <a class="btn ghost" href="/login" style="background:#eef3ff;color:var(--brand);text-decoration:none;align-self:center">Already have an account</a>
+      </div>
+    </form>
+  </div>
+</main>
+<%- include('../partials/footer') %>

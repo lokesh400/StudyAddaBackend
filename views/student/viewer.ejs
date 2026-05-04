@@ -1,0 +1,13 @@
+<%- include('../partials/header') %>
+<main class="viewer-shell">
+  <div class="watermark"><%= watermark %></div>
+  <iframe title="PDF Viewer" src="/pdfjs/web/viewer.html?file=/view/<%= material._id %>#toolbar=0" class="pdf-frame"></iframe>
+</main>
+<script>
+  const start = Date.now();
+  window.addEventListener('beforeunload', () => {
+    const secondsSpent = Math.floor((Date.now() - start) / 1000);
+    navigator.sendBeacon('/activity', new Blob([JSON.stringify({ materialId: '<%= material._id %>', secondsSpent })], { type: 'application/json' }));
+  });
+</script>
+<%- include('../partials/footer') %>
