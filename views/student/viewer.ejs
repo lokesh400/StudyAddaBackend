@@ -1,10 +1,192 @@
 <%- include('../partials/header') %>
-<main class="viewer-shell">
-  <div class="watermark"><%= watermark %></div>
-  <iframe title="PDF Viewer" src="/pdfjs/web/viewer.html?file=/view/<%= material._id %>#toolbar=0" class="pdf-frame"></iframe>
+<main class="book-viewer-shell full-viewer" id="bookViewerShell">
+  <section class="book-stage full-stage" id="bookStage">
+    <div class="book-toolbar floating-toolbar">
+      <div>
+        <h2 class="book-title"><%= material.title %></h2>
+        <p class="book-subtitle">Protected Reader | Session-secured stream | Expires in <span id="tokenTimer">05:00</span></p>
+      </div>
+      <div class="book-actions">
+        <button type="button" id="fullScreenBtn" class="btn">Full Screen</button>
+      </div>
+    </div>
+    <div class="book-watermark"><%= watermark %></div>
+    <div class="pdfjs-shell book-frame">
+      <div class="pdfjs-toolbar">
+        <button type="button" class="btn ghost" id="prevPageBtn">Prev</button>
+        <span id="pageInfo" class="page-info">Loading document...</span>
+        <button type="button" class="btn ghost" id="nextPageBtn">Next</button>
+      </div>
+      <div class="pdfjs-canvas-wrap" id="pdfCanvasWrap">
+        <canvas id="pdfCanvas"></canvas>
+        <div id="pdfErrorBox" class="pdf-error-box" style="display:none;">
+          <p id="pdfErrorText">Unable to render document.</p>
+          <button type="button" class="btn" id="retryPdfBtn">Retry</button>
+        </div>
+      </div>
+    </div>
+    <div class="book-gloss" aria-hidden="true"></div>
+  </section>
+
+  <p class="book-note">Security notice: This viewer blocks common shortcuts and uses expiring signed links. Absolute prevention of screenshots/camera capture is not technically possible on any web app.</p>
 </main>
 <script>
+  document.body.classList.add('viewer-mode');
+
   const start = Date.now();
+  const tokenExpiryMs = Number('<%= tokenExpiryMs %>') || 300000;
+  const timerEl = document.getElementById('tokenTimer');
+  const fullScreenBtn = document.getElementById('fullScreenBtn');
+  const shell = document.getElementById('bookViewerShell');
+  const pdfCanvas = document.getElementById('pdfCanvas');
+  const pdfCanvasWrap = document.getElementById('pdfCanvasWrap');
+  const prevPageBtn = document.getElementById('prevPageBtn');
+  const nextPageBtn = document.getElementById('nextPageBtn');
+  const pageInfo = document.getElementById('pageInfo');
+  const pdfErrorBox = document.getElementById('pdfErrorBox');
+  const pdfErrorText = document.getElementById('pdfErrorText');
+  const retryPdfBtn = document.getElementById('retryPdfBtn');
+  let pdfDoc = null;
+  let currentPage = 1;
+  let rendering = false;
+  let loadingStarted = false;
+
+  function showRenderError(message) {
+    pageInfo.textContent = 'Render error';
+    pdfCanvas.style.display = 'none';
+    pdfErrorBox.style.display = 'flex';
+    pdfErrorText.textContent = message || 'Unable to render PDF on this device.';
+    prevPageBtn.disabled = true;
+    nextPageBtn.disabled = true;
+  }
+
+  async function renderPage(pageNum) {
+    if (!pdfDoc || rendering) return;
+    rendering = true;
+    const page = await pdfDoc.getPage(pageNum);
+
+    const unscaledViewport = page.getViewport({ scale: 1 });
+    const availableWidth = Math.max(320, pdfCanvasWrap.clientWidth - 24);
+    const scale = availableWidth / unscaledViewport.width;
+    const viewport = page.getViewport({ scale });
+
+    const context = pdfCanvas.getContext('2d');
+    pdfCanvas.width = Math.floor(viewport.width);
+    pdfCanvas.height = Math.floor(viewport.height);
+
+    await page.render({ canvasContext: context, viewport }).promise;
+
+    currentPage = pageNum;
+    pageInfo.textContent = `Page ${currentPage} / ${pdfDoc.numPages}`;
+    prevPageBtn.disabled = currentPage <= 1;
+    nextPageBtn.disabled = currentPage >= pdfDoc.numPages;
+    rendering = false;
+  }
+
+  async function initPdf() {
+    if (loadingStarted) return;
+    loadingStarted = true;
+    pdfErrorBox.style.display = 'none';
+    pdfCanvas.style.display = 'block';
+    pageInfo.textContent = 'Loading document...';
+
+    try {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js';
+      script.onload = async () => {
+        try {
+          if (!window.pdfjsLib) {
+            loadingStarted = false;
+            return showRenderError('Reader library unavailable.');
+          }
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js';
+
+          // Mobile-safe path: fetch bytes first, then render from data.
+          const fileResponse = await fetch('<%= secureFileUrl %>', {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store'
+          });
+          if (!fileResponse.ok) {
+            throw new Error(`File request failed (${fileResponse.status})`);
+          }
+          const fileBytes = await fileResponse.arrayBuffer();
+          if (!fileBytes || fileBytes.byteLength === 0) {
+            throw new Error('Empty PDF response');
+          }
+
+          const loadingTask = window.pdfjsLib.getDocument({
+            data: fileBytes,
+            disableRange: true,
+            disableStream: true,
+            disableAutoFetch: true
+          });
+          pdfDoc = await loadingTask.promise;
+          await renderPage(1);
+        } catch (err) {
+          showRenderError(`Could not render with PDF.js: ${err.message || 'Unknown error'}`);
+        } finally {
+          loadingStarted = false;
+        }
+      };
+      script.onerror = () => {
+        loadingStarted = false;
+        showRenderError('Could not load reader script.');
+      };
+      document.body.appendChild(script);
+    } catch (err) {
+      loadingStarted = false;
+      showRenderError('Unable to open document right now.');
+    }
+  }
+
+  prevPageBtn.addEventListener('click', () => renderPage(Math.max(1, currentPage - 1)));
+  nextPageBtn.addEventListener('click', () => renderPage(Math.min(pdfDoc ? pdfDoc.numPages : 1, currentPage + 1)));
+  window.addEventListener('resize', () => { if (pdfDoc) renderPage(currentPage); });
+  retryPdfBtn.addEventListener('click', () => {
+    initPdf();
+  });
+  initPdf();
+
+  const ticker = setInterval(() => {
+    const elapsed = Date.now() - start;
+    const left = Math.max(0, tokenExpiryMs - elapsed);
+    const mins = String(Math.floor(left / 60000)).padStart(2, '0');
+    const secs = String(Math.floor((left % 60000) / 1000)).padStart(2, '0');
+    timerEl.textContent = `${mins}:${secs}`;
+    if (left === 0) clearInterval(ticker);
+  }, 1000);
+
+  fullScreenBtn.addEventListener('click', async () => {
+    if (!document.fullscreenElement) {
+      await shell.requestFullscreen();
+      fullScreenBtn.textContent = 'Exit Full Screen';
+    } else {
+      await document.exitFullscreen();
+      fullScreenBtn.textContent = 'Full Screen';
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    fullScreenBtn.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
+  });
+
+  // Extra deterrents on viewer page.
+  document.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'printscreen') {
+      e.preventDefault();
+      navigator.clipboard && navigator.clipboard.writeText('Screenshots are disabled in protected viewer.').catch(() => {});
+    }
+    if ((e.ctrlKey || e.metaKey) && ['s', 'p', 'u', 'o'].includes(k)) e.preventDefault();
+    if (e.key === 'F12') e.preventDefault();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) document.body.classList.add('viewer-blur');
+    else document.body.classList.remove('viewer-blur');
+  });
+
   window.addEventListener('beforeunload', () => {
     const secondsSpent = Math.floor((Date.now() - start) / 1000);
     navigator.sendBeacon('/activity', new Blob([JSON.stringify({ materialId: '<%= material._id %>', secondsSpent })], { type: 'application/json' }));

@@ -6,6 +6,7 @@ const { isLoggedIn, isAdmin } = require('../middleware/auth');
 const router = express.Router();
 router.use(isLoggedIn, isAdmin);
 
+router.get('/', adminController.dashboard);
 router.get('/materials', adminController.dashboard);
 router.post('/materials', upload.single('pdf'), adminController.uploadMaterial);
 router.delete('/materials/:id', adminController.deleteMaterial);

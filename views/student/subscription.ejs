@@ -1,7 +1,80 @@
 <%- include('../partials/header') %>
 <main class="container">
-<h1>Subscription</h1>
-<p>Plan: Rs.29/month</p>
-<form action="/subscription/activate" method="POST"><button type="submit">Activate Subscription</button></form>
+	<div class="panel" style="max-width:640px;margin:28px auto;padding:28px;text-align:left">
+		<h2 style="margin-top:0">Subscription</h2>
+		<p style="color:var(--muted-2)">Monthly plan — Rs.29/month. Secure checkout via Razorpay.</p>
+		<div style="margin-top:18px">
+			<button id="rzpay-btn" class="btn">Pay Rs.29 and Activate</button>
+		</div>
+		<div id="sub-msg" style="margin-top:12px;color:var(--muted-2)"></div>
+	</div>
+
+	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+	<script>
+		document.getElementById('rzpay-btn').addEventListener('click', async function () {
+			const button = this;
+			const messageEl = document.getElementById('sub-msg');
+			try {
+				button.disabled = true;
+				messageEl.textContent = 'Preparing secure checkout...';
+
+				const res = await fetch('/subscription/create-order', { method: 'POST' });
+				const data = await res.json();
+				if (!data.ok) {
+					messageEl.textContent = data.message || 'Could not create order';
+					button.disabled = false;
+					return;
+				}
+
+				if (typeof Razorpay === 'undefined') {
+					messageEl.textContent = 'Razorpay checkout failed to load. Check your internet and try again.';
+					button.disabled = false;
+					return;
+				}
+
+				const options = {
+					key: data.key,
+					amount: data.amount,
+					currency: data.currency,
+					order_id: data.orderId,
+					method: {
+						upi: true,
+						card: true,
+						netbanking: true,
+						wallet: false,
+						emi: false,
+						paylater: false
+					},
+					handler: async function (response) {
+						// send confirmation to server
+						const body = new URLSearchParams();
+						body.append('razorpay_payment_id', response.razorpay_payment_id);
+						body.append('razorpay_order_id', response.razorpay_order_id);
+						body.append('razorpay_signature', response.razorpay_signature);
+						const confirm = await fetch('/subscription/confirm', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+						const result = await confirm.json();
+						if (result.ok) {
+							messageEl.textContent = 'Subscription activated successfully.';
+							setTimeout(() => window.location.href = '/materials', 1000);
+						} else {
+							messageEl.textContent = result.message || 'Payment verification failed.';
+							button.disabled = false;
+						}
+					},
+					modal: { ondismiss: function() { button.disabled = false; messageEl.textContent = 'Payment was cancelled.'; } }
+				};
+
+				const rzp = new Razorpay(options);
+				rzp.on('payment.failed', function (response) {
+					messageEl.textContent = response.error && response.error.description ? response.error.description : 'Payment failed. Please try again.';
+					button.disabled = false;
+				});
+				rzp.open();
+			} catch (err) {
+				messageEl.textContent = err.message || 'Unable to start checkout right now. Please try again.';
+				button.disabled = false;
+			}
+		});
+	</script>
 </main>
 <%- include('../partials/footer') %>

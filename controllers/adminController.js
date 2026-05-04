@@ -5,6 +5,8 @@ const Department = require('../models/Department');
 const Branch = require('../models/Branch');
 const Semester = require('../models/Semester');
 const Subject = require('../models/Subject');
+const User = require('../models/User');
+const Payment = require('../models/Payment');
 
 module.exports.dashboard = async (req, res) => {
   const [materials, departments, branches, semesters, subjects] = await Promise.all([
@@ -14,7 +16,14 @@ module.exports.dashboard = async (req, res) => {
     Semester.find().populate('branch').sort({ number: 1 }),
     Subject.find().populate('semester').sort({ name: 1 })
   ]);
-  res.render('admin/dashboard', { materials, departments, branches, semesters, subjects });
+
+  // admin stats
+  const totalUsers = await User.countDocuments();
+  const activeSubscriptions = await User.countDocuments({ subscriptionExpiry: { $gt: new Date() } });
+  const totalPayments = await Payment.countDocuments();
+  const payingUsers = await Payment.distinct('user');
+
+  res.render('admin/dashboard', { materials, departments, branches, semesters, subjects, stats: { totalUsers, activeSubscriptions, totalPayments, payingUsers: payingUsers.length } });
 };
 
 module.exports.createDepartment = async (req, res) => { await Department.create({ name: req.body.name }); req.flash('success', 'Department added.'); res.redirect('/admin/materials'); };

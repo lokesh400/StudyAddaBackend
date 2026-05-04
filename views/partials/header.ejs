@@ -12,7 +12,7 @@
     <div>
       <% if (typeof currentUser !== 'undefined' && currentUser) { %>
         <a href="/favorites">Favorites</a>
-        <% if (currentUser.role === 'admin') { %><a href="/admin/materials">Admin</a><% } %>
+        <% if (currentUser.role === 'admin') { %><a href="/admin">Admin</a><% } %>
         <form action="/logout" method="POST" style="display:inline;"><button>Logout</button></form>
       <% } else { %>
         <a href="/login">Login</a>
