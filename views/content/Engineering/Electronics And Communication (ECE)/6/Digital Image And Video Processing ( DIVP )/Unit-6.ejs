@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 6: Image Compression - Complete Textbook</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.8;
+            color: #1a1a1a;
+            background: #f5f5f5;
+            /* padding: 20px; */
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            border-bottom: 3px solid #7F77DD;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .course-tag {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .toc {
+            background: #f9f9f9;
+            border-left: 4px solid #7F77DD;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        .toc h2 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .toc-item {
+            padding: 6px 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .section-num {
+            background: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+        }
+        h2 {
+            font-size: 22px;
+            flex: 1;
+            color: #1a1a1a;
+        }
+        h3 {
+            font-size: 17px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            padding-left: 10px;
+            border-left: 3px solid #7F77DD;
+            color: #1a1a1a;
+        }
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        .definition {
+            background: #f0f9f5;
+            border-left: 4px solid #1D9E75;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .def-label {
+            font-weight: bold;
+            color: #0F6E56;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .analogy {
+            background: #f5f0ff;
+            border-left: 4px solid #7F77DD;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-style: italic;
+        }
+        .analogy-label {
+            font-weight: bold;
+            color: #534AB7;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .important {
+            background: #fff9f0;
+            border: 1px solid #ddd;
+            border-left: 4px solid #E24B4A;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .important-label {
+            font-weight: bold;
+            color: #E24B4A;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .formula {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .formula-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-family: sans-serif;
+        }
+        ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        th {
+            background: #f0f0f0;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .highlight {
+            background: #fffacd;
+            padding: 0 3px;
+            border-radius: 2px;
+        }
+        .key-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .key-row {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .key-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .key-term {
+            font-weight: bold;
+            font-size: 13px;
+            color: #1a1a1a;
+        }
+        .key-desc {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .diagram {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .diagram-title {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .pipe-box {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            min-width: 90px;
+        }
+        .pipe-arrow {
+            font-size: 18px;
+            color: #999;
+        }
+        .divider {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 30px 0;
+        }
+        .note {
+            font-size: 13px;
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="course-tag">ECEL606 — Digital Image & Video Processing</div>
+            <h1>Unit 6: Image Compression</h1>
+            <div class="subtitle">A complete, self-contained study of compression theory — from the mathematics of redundancy to the algorithms behind JPEG and JPEG-2000.</div>
+        </div>
+
+        <div class="toc">
+            <h2>Contents</h2>
+            <div class="toc-item"><strong>6.1</strong> Why Compression? — The Problem of Image Size</div>
+            <div class="toc-item"><strong>6.2</strong> Types of Redundancy in Images</div>
+            <div class="toc-item"><strong>6.3</strong> Lossless vs. Lossy Compression</div>
+            <div class="toc-item"><strong>6.4</strong> Entropy and Information Theory</div>
+            <div class="toc-item"><strong>6.5</strong> Lossless Compression Methods</div>
+            <div class="toc-item"><strong>6.6</strong> Lossy Compression and the Discrete Cosine Transform</div>
+            <div class="toc-item"><strong>6.7</strong> JPEG — The Dominant Standard</div>
+            <div class="toc-item"><strong>6.8</strong> JPEG-2000 — The Modern Alternative</div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.1</span>
+                <h2>Why Compression? The Problem of Image Size</h2>
+            </div>
+
+            <h3>The Explosion of Image Data</h3>
+            <p>In the modern digital world, images are everywhere: photographs from smartphones, medical imaging (MRI, CT scans), satellite imagery, video streams, security cameras, scientific research data, and more. However, uncompressed images require enormous amounts of storage space and bandwidth to transmit.</p>
+
+            <p>Consider a simple example: a high-definition photograph measuring 1920 × 1080 pixels, with each pixel stored as 24 bits of color information (8 bits for red, 8 for green, 8 for blue). The uncompressed file size would be:</p>
+
+            <div class="formula">
+                <div class="formula-label">Uncompressed image size calculation</div>
+File size = 1920 × 1080 pixels × 24 bits/pixel
+           = 1920 × 1080 × 3 bytes/pixel
+           = 6,220,800 bytes
+           ≈ 6.2 megabytes (MB)
+            </div>
+
+            <p>This is just one photograph. A one-hour HD video at 24 frames per second would require approximately 540 gigabytes of storage — utterly impractical without compression. Medical imaging, satellite data, and scientific experiments generate petabytes (1000 terabytes) of image data annually, making compression not just desirable but essential.</p>
+
+            <div class="important">
+                <div class="important-label">The central question</div>
+                <p>Can we represent the same image content using fewer bits, without losing information that matters to human observers? This is the fundamental problem that image compression solves.</p>
+            </div>
+
+            <h3>Compression Ratio and Bits Per Pixel</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Compression Ratio</div>
+                <p>The compression ratio (CR) is the ratio of the uncompressed file size to the compressed file size:</p>
+                <p style="margin-top: 8px;"><strong>CR = (Uncompressed size in bits) / (Compressed size in bits)</strong></p>
+                <p style="margin-top: 8px;">A compression ratio of 10:1 means the uncompressed data is 10 times larger than the compressed data — you have achieved 10× compression. The higher the ratio, the better the compression (smaller file).</p>
+            </div>
+
+            <div class="definition">
+                <div class="def-label">Definition — Bits Per Pixel (BPP)</div>
+                <p>Bits Per Pixel is a measure of the average number of bits used to encode each pixel after compression:</p>
+                <p style="margin-top: 8px;"><strong>BPP = (Total compressed bits) / (Total number of pixels)</strong></p>
+                <p style="margin-top: 8px;">An uncompressed 24-bit RGB image has 3 BPP. Typical JPEG compression achieves 0.5–2 BPP depending on quality settings. JPEG-2000 can achieve 0.1–0.5 BPP. The lower the BPP, the more compression has been applied.</p>
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-label">Analogy — Summarizing a Book</div>
+                <p>Imagine you have a 300-page novel. Uncompressed storage means writing out the entire book. Compression is like writing a summary: a 3-page summary uses 1/100th the space but communicates the essential story. For a factual text (like an instruction manual), a good summary loses almost no information. For a novel, a summary loses artistic details but preserves the plot.</p>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.2</span>
+                <h2>Types of Redundancy in Images</h2>
+            </div>
+
+            <h3>What is Redundancy?</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Redundancy</div>
+                <p>Redundancy in an image refers to data that is repetitive, predictable, or unnecessary — data that does not contribute new information. Compression works by identifying and eliminating redundancy. Different types of redundancy require different compression strategies to remove.</p>
+            </div>
+
+            <p>There are three main types of redundancy in images, and understanding each is essential to understanding why different compression methods are used for different images.</p>
+
+            <h3>1. Coding Redundancy</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Coding Redundancy</div>
+                <p>Coding redundancy occurs when the symbols (pixel values) in an image are not used with equal probability. If some pixel values appear frequently while others are rare, using the same number of bits for all values wastes space. By assigning fewer bits to frequent values and more bits to rare values, we can reduce the average bits per symbol.</p>
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-label">Analogy — Morse Code</div>
+                <p>In English text, the letter 'e' appears much more frequently than the letter 'q'. Morse code assigns 'e' the shortest symbol (•) and 'q' a longer symbol (--•-). This is the principle of coding redundancy — match the code length to the frequency of occurrence.</p>
+            </div>
+
+            <p><strong>Example:</strong> A grayscale image contains 256 possible pixel values (0–255). In uncompressed form, each pixel is stored as 8 bits, regardless of its value. But suppose the image is a photograph taken at night: most pixels have dark values (0–50), while only a few pixels are bright (200–255). Coding redundancy allows us to represent the common dark values with 4 bits and rare bright values with 12 bits, reducing the average bits per pixel.</p>
+
+            <h3>2. Inter-Pixel Redundancy (Spatial Redundancy)</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Inter-Pixel Redundancy</div>
+                <p>Inter-pixel redundancy (also called spatial redundancy) occurs because neighboring pixels in an image tend to have similar values. The difference between adjacent pixels is usually small. Therefore, instead of encoding each pixel independently, we can encode the difference between a pixel and its neighbor (or prediction). This reduces the range of values that need to be encoded.</p>
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-label">Analogy — Storing a Sequence of Temperatures</div>
+                <p>Suppose you record outdoor temperature hourly over a week. Rather than storing each absolute temperature (18°C, 18.1°C, 18.2°C, ...), store only the changes from hour to hour (0°C, +0.1°C, +0.1°C, ...). The changes are typically small integers, requiring fewer bits than the absolute values.</p>
+            </div>
+
+            <h3>3. Psychovisual Redundancy</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Psychovisual Redundancy</div>
+                <p>Psychovisual redundancy (also called perceptual redundancy) refers to information in an image that is imperceptible to the human visual system. The human eye is less sensitive to certain aspects of images (like high-frequency detail or small color variations) than to others. Data that cannot be perceived can be discarded without the viewer noticing, resulting in lossy compression.</p>
+            </div>
+
+            <p><strong>Key visual limitations:</strong></p>
+            <ul>
+                <li><strong>Luminance vs. Chrominance sensitivity:</strong> The eye is much more sensitive to brightness changes than to color changes. You can reduce color resolution without perceivable loss while maintaining brightness detail.</li>
+                <li><strong>High-frequency insensitivity:</strong> The eye is less sensitive to fine textures and details (high frequencies) than to overall structure (low frequencies).</li>
+                <li><strong>Temporal masking:</strong> In video, rapid motion masks fine detail — the eye cannot distinguish texture changes during fast motion.</li>
+                <li><strong>Spatial masking:</strong> Detail near edges is less visible because edges capture attention. Detail in textured regions is masked by the texture itself.</li>
+            </ul>
+
+            <div class="analogy">
+                <div class="analogy-label">Analogy — Watching a Movie at a Distance</div>
+                <p>If you sit far from a projection screen, you cannot perceive fine details and subtle color variations, but you can see the overall image clearly. Psychovisual compression is like encoding the image as if the viewer is at that distance — information that would not be visible at that distance is discarded.</p>
+            </div>
+
+            <div class="key-box">
+                <strong>Summary — The Three Redundancies:</strong>
+                <div class="key-row">
+                    <div class="key-term">Coding</div>
+                    <div class="key-desc">Some values appear more often than others. Use shorter codes for frequent values. Always lossless.</div>
+                </div>
+                <div class="key-row">
+                    <div class="key-term">Inter-Pixel</div>
+                    <div class="key-desc">Neighboring pixels are correlated. Encode differences instead of absolute values. Lossless or lossy.</div>
+                </div>
+                <div class="key-row">
+                    <div class="key-term">Psychovisual</div>
+                    <div class="key-desc">Some information is imperceptible to humans. Discard it without noticeable loss. Always lossy.</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.3</span>
+                <h2>Lossless vs. Lossy Compression</h2>
+            </div>
+
+            <h3>Fundamental Trade-Off</h3>
+
+            <p>All image compression methods can be divided into two categories, and choosing between them represents the most fundamental trade-off in compression:</p>
+
+            <div class="definition">
+                <div class="def-label">Definition — Lossless Compression</div>
+                <p>Lossless compression is a compression method in which the original image can be recovered exactly and perfectly from the compressed data. Every pixel value, every bit of information in the original is preserved. Lossless compression typically achieves modest compression ratios (2:1 to 8:1), and is achieved by removing only coding redundancy and inter-pixel redundancy.</p>
+            </div>
+
+            <div class="definition">
+                <div class="def-label">Definition — Lossy Compression</div>
+                <p>Lossy compression is a compression method in which the reconstructed image is not identical to the original — some information is permanently discarded. The discarded information is typically imperceptible to human observers (psychovisual redundancy). Lossy compression can achieve much higher compression ratios (10:1 to 100:1) than lossless, but the decompressed image exhibits visible artifacts if compression is too aggressive.</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Lossless</th>
+                        <th>Lossy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Perfect reconstruction</td>
+                        <td>Yes, always</td>
+                        <td>No, loss is permanent</td>
+                    </tr>
+                    <tr>
+                        <td>Compression ratio</td>
+                        <td>2:1 to 8:1 typical</td>
+                        <td>10:1 to 100:1 typical</td>
+                    </tr>
+                    <tr>
+                        <td>Artifacts</td>
+                        <td>None</td>
+                        <td>Visible if compression too aggressive</td>
+                    </tr>
+                    <tr>
+                        <td>Applications</td>
+                        <td>Medical imaging, archival, text</td>
+                        <td>Photography, video, web images</td>
+                    </tr>
+                    <tr>
+                        <td>Complexity</td>
+                        <td>Generally simpler algorithms</td>
+                        <td>Requires psychovisual modeling</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>When to Choose Which?</h3>
+
+            <ul>
+                <li><strong>Medical imaging:</strong> Lossless always. A physician must see every detail.</li>
+                <li><strong>Photography:</strong> Lossy (JPEG) is standard. Compression ratios 20–50× better than lossless.</li>
+                <li><strong>Text documents:</strong> Lossless. Any loss in text is obvious and unacceptable.</li>
+                <li><strong>Video:</strong> Usually lossy (H.264, H.265). Temporal nature masks detail.</li>
+                <li><strong>Archival storage:</strong> Often lossless. You don't know what future needs might reveal as important.</li>
+            </ul>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.4</span>
+                <h2>Entropy and Information Theory</h2>
+            </div>
+
+            <h3>Shannon Entropy</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Shannon Entropy</div>
+                <p>Shannon entropy H is a measure of the average information content (or uncertainty) in a message. For a discrete source with symbols s₁, s₂, ..., s_k having probabilities P(s₁), P(s₂), ..., P(s_k), entropy is defined as:</p>
+                <div style="margin-top: 8px;"><strong>H = −Σ P(s_i) · log₂(P(s_i)) bits/symbol</strong></div>
+                <p style="margin-top: 8px;">where the sum is over all k possible symbols, and log₂ is the logarithm base 2 (giving units of bits).</p>
+            </div>
+
+            <div class="important">
+                <div class="important-label">Fundamental theorem of lossless compression</div>
+                <p>The Shannon Source Coding Theorem states that the average number of bits needed to encode a message is at least equal to the entropy H. You can approach H arbitrarily closely with the right coding scheme, but you can never go below H. Therefore, entropy represents the theoretical limit of lossless compression — it is the "speed of light" for compression algorithms.</p>
+            </div>
+
+            <h3>Understanding Entropy Intuitively</h3>
+
+            <p>Entropy measures <span class="highlight">predictability</span>. If a signal is very predictable (many pixels the same value), entropy is low and compression is possible. If the signal is random and unpredictable (all pixel values equally likely), entropy is high and compression is impossible.</p>
+
+            <div class="key-box">
+                <strong>Three Examples:</strong>
+                <div class="key-row">
+                    <div class="key-term">Example 1: Uniform</div>
+                    <div class="key-desc">Every pixel value (0–255) equally probable. H = 8 bits/symbol. No compression possible.</div>
+                </div>
+                <div class="key-row">
+                    <div class="key-term">Example 2: Two values</div>
+                    <div class="key-desc">Only black and white, each 50% probability. H = 1 bit/symbol. Need minimum 1 bit per pixel.</div>
+                </div>
+                <div class="key-row">
+                    <div class="key-term">Example 3: Skewed</div>
+                    <div class="key-desc">99% black, 1% white. H ≈ 0.08 bits/symbol. Need only 0.08 bits per pixel on average!</div>
+                </div>
+            </div>
+
+            <div class="formula">
+                <div class="formula-label">Computing entropy — Example 3 detailed</div>
+H = −[0.99 · log₂(0.99) + 0.01 · log₂(0.01)]
+  = −[0.99 · (−0.0145) + 0.01 · (−6.644)]
+  = −[−0.01435 − 0.06644]
+  = 0.081 bits/symbol
+            </div>
+
+            <h3>Entropy and Maximum Compression Ratio</h3>
+
+            <p>Entropy directly limits the compression ratio. If an uncompressed image uses 8 bits per pixel, and its entropy is H bits per symbol, the theoretical maximum compression ratio is:</p>
+
+            <div class="formula">
+                <div class="formula-label">Maximum theoretical compression ratio</div>
+CR_max = 8 / H
+
+Example: If H = 2 bits/symbol, then CR_max = 8/2 = 4:1
+You can compress the data to 2 bits per pixel at most.
+            </div>
+
+            <p>This is critical: entropy tells you whether a compression algorithm is working well or not. If your lossless compression achieves 0.5 bits/symbol but the entropy is only 0.2 bits/symbol, your algorithm is performing poorly — there is room for improvement.</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.5</span>
+                <h2>Lossless Compression Methods</h2>
+            </div>
+
+            <h3>Huffman Coding</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Huffman Coding</div>
+                <p>Huffman coding is an optimal variable-length encoding algorithm that assigns shorter bit codes to more frequent symbols and longer codes to less frequent symbols. It achieves compression ratios that come very close to (within 1% of) the theoretical entropy limit. The algorithm, developed by David Huffman in 1952, constructs a binary tree from the symbol frequencies.</p>
+            </div>
+
+            <p><strong>Algorithm Steps:</strong></p>
+            <ol style="margin-left: 20px; margin-bottom: 12px;">
+                <li>Count the frequency of each symbol in the data.</li>
+                <li>Create a leaf node for each symbol and put it in a priority queue.</li>
+                <li>While there is more than one node in the queue: Remove the two nodes with the lowest frequencies. Create a new internal node with these two nodes as children and frequency = sum of the two frequencies. Put the new node back in the queue.</li>
+                <li>The remaining node is the root. Assign bit codes: left = 0, right = 1.</li>
+            </ol>
+
+            <div class="analogy">
+                <div class="analogy-label">Analogy — Organizing a Library</div>
+                <p>Frequently borrowed books go on shelves at eye level (easy to access, like shorter codes). Rarely borrowed books go on high or low shelves (harder to access, like longer codes). This arrangement minimizes average access time, just as Huffman coding minimizes average code length.</p>
+            </div>
+
+            <p><strong>Example:</strong> Suppose an image has 4 pixel values with frequencies: A (50%), B (30%), C (15%), D (5%). Huffman assigns: A=0 (1 bit), B=10 (2 bits), C=110 (3 bits), D=111 (3 bits). Average code length = 0.5×1 + 0.3×2 + 0.15×3 + 0.05×3 = 1.7 bits per symbol.</p>
+
+            <h3>Predictive Coding</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Predictive Coding</div>
+                <p>Predictive coding removes inter-pixel redundancy by predicting the value of each pixel based on previously encoded pixels, then encoding the prediction error (residual). The prediction error has a much smaller range than the original pixel values, allowing more efficient encoding.</p>
+            </div>
+
+            <div class="formula">
+                <div class="formula-label">Predictive coding formula</div>
+Predicted value: f̂(x,y) = Predictor(left and above pixels)
+Prediction error: e(x,y) = f(x,y) − f̂(x,y)
+Encoded data: Huffman code of e(x,y)
+Reconstructed: f'(x,y) = f̂(x,y) + e(x,y) = f(x,y) ✓ (exact)
+            </div>
+
+            <div class="key-box">
+                <strong>Common Predictors:</strong>
+                <div class="key-row">
+                    <div class="key-term">Simple (left)</div>
+                    <div class="key-desc">f̂(x,y) = f(x−1,y). Predict pixel is same as left neighbor.</div>
+                </div>
+                <div class="key-row">
+                    <div class="key-term">Simple (up)</div>
+                    <div class="key-desc">f̂(x,y) = f(x,y−1). Predict pixel is same as above neighbor.</div>
+                </div>
+                <div class="key-row">
+                    <div class="key-term">Average</div>
+                    <div class="key-desc">f̂(x,y) = [f(x−1,y) + f(x,y−1)] / 2. Uses both neighbors.</div>
+                </div>
+                <div class="key-row">
+                    <div class="key-term">Gradient</div>
+                    <div class="key-desc">f̂(x,y) = f(x−1,y) + f(x,y−1) − f(x−1,y−1). Predicts based on local gradients.</div>
+                </div>
+            </div>
+
+            <p>Predictive coding is the basis of FLAC (audio) and PNG (images).</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.6</span>
+                <h2>Lossy Compression and Transform Coding</h2>
+            </div>
+
+            <h3>Transform Coding Principle</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Transform Coding</div>
+                <p>Transform coding is a lossy compression technique in which the image is first transformed into a different domain (frequency domain, for example) where the data becomes more concentrated — important information is concentrated in a few large coefficients, while unimportant information (high frequencies, noise) spreads across many small coefficients. The small coefficients are then discarded (quantized), and only the important coefficients are encoded.</p>
+            </div>
+
+            <p><strong>The Transform Coding Pipeline:</strong></p>
+            <div class="pipeline">
+                <div class="pipe-box">Image</div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-box">Transform<br>(DCT)</div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-box">Quantize<br>(discard)</div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-box">Entropy<br>code</div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-box">Compressed</div>
+            </div>
+
+            <h3>The Discrete Cosine Transform (DCT)</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Discrete Cosine Transform</div>
+                <p>The Discrete Cosine Transform is a mathematical transformation that decomposes an image block into a sum of cosine basis functions of increasing frequency. Unlike the Fourier Transform, the DCT uses only cosine functions, which naturally satisfy image boundary conditions. For an N×N block:</p>
+                <div style="margin-top: 8px; font-family: monospace; font-size: 12px;">F(u,v) = (2/N)·C(u)·C(v) · Σ_x Σ_y f(x,y)·cos[π(2x+1)u/(2N)]·cos[π(2y+1)v/(2N)]</div>
+            </div>
+
+            <p><strong>Advantages of DCT over Fourier Transform:</strong></p>
+            <ul>
+                <li><strong>Energy concentration:</strong> DCT concentrates more image energy in fewer low-frequency coefficients.</li>
+                <li><strong>Real-valued output:</strong> Unlike FT (complex), DCT produces real numbers, simpler to work with.</li>
+                <li><strong>Efficient computation:</strong> Fast DCT achieves O(N log N) computation time.</li>
+                <li><strong>Block independence:</strong> Dividing into 8×8 blocks allows local adaptation and reduces memory.</li>
+            </ul>
+
+            <h3>Quantization</h3>
+
+            <div class="definition">
+                <div class="def-label">Definition — Quantization</div>
+                <p>Quantization is the irreversible step that discards information by reducing the precision of each DCT coefficient. A quantization matrix Q specifies how coarsely each frequency component should be quantized:</p>
+                <div style="margin-top: 8px;"><strong>Quantized[u,v] = round(DCT[u,v] / Q[u,v])</strong></div>
+            </div>
+
+            <p>This is the key to lossy compression: large step sizes → many coefficients become zero → better compression but more loss.</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.7</span>
+                <h2>JPEG — The Dominant Image Standard</h2>
+            </div>
+
+            <h3>The JPEG Compression Pipeline</h3>
+
+            <p>JPEG compression follows a well-defined sequence of steps:</p>
+
+            <p><strong>Step 1: Color Space Conversion (RGB → YCbCr)</strong></p>
+            <p>JPEG converts from RGB to YCbCr, where Y is luminance (brightness) and Cb, Cr are chrominance (color). This exploits the eye's lower sensitivity to color:</p>
+
+            <div class="formula">
+                <div class="formula-label">RGB to YCbCr conversion</div>
+Y  =  0.299·R + 0.587·G + 0.114·B   (luminance)
+Cb = −0.169·R − 0.331·G + 0.500·B   (color difference)
+Cr =  0.500·R − 0.419·G − 0.081·B   (color difference)
+            </div>
+
+            <p><strong>Step 2: Chroma Subsampling (4:2:0)</strong></p>
+            <p>The Y channel is kept at full resolution, but Cb and Cr are subsampled by 2 horizontally and vertically (4:2:0 subsampling). Color information is stored at 1/4 the resolution of brightness. The eye cannot perceive this reduction, but file size is significantly reduced.</p>
+
+            <p><strong>Step 3: Block Division</strong></p>
+            <p>The image is divided into non-overlapping 8×8 blocks (Minimum Code Units). Each block is independently transformed and quantized. This reduces memory and allows local adaptation.</p>
+
+            <p><strong>Step 4: DCT Transform</strong></p>
+            <p>The 2D DCT is applied to each 8×8 block, producing 64 DCT coefficients. The DC component (F[0,0]) is the average brightness; AC components represent deviations at increasing frequencies.</p>
+
+            <p><strong>Step 5: Quantization</strong></p>
+            <p>DCT coefficients are quantized using a quantization matrix Q, scaled by a quality parameter. Q=50 is medium quality, Q=95 is high quality. Higher quality → smaller step sizes → less quantization → better image → larger file.</p>
+
+            <p><strong>Step 6: Entropy Coding</strong></p>
+            <p>Quantized coefficients are scanned in zig-zag order (grouping low-frequency). Zero coefficients are encoded with Run-Length Encoding (RLE), non-zero with Huffman coding.</p>
+
+            <h3>JPEG Quality and Artifacts</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Quality (Q)</th>
+                        <th>Characteristic</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>95+</td>
+                        <td>Visually lossless</td>
+                        <td>Archival</td>
+                    </tr>
+                    <tr>
+                        <td>80–90</td>
+                        <td>High quality</td>
+                        <td>Photography (recommended)</td>
+                    </tr>
+                    <tr>
+                        <td>60–80</td>
+                        <td>Medium quality</td>
+                        <td>Web use</td>
+                    </tr>
+                    <tr>
+                        <td>30–60</td>
+                        <td>Low quality, visible artifacts</td>
+                        <td>Limited bandwidth only</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;30</td>
+                        <td>Severe artifacts</td>
+                        <td>Rarely acceptable</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>The most characteristic JPEG artifact is <span class="highlight">blocking</span> — visible 8×8 block boundaries. Another artifact is <span class="highlight">mosquito noise</span> — spurious oscillations around edges.</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">6.8</span>
+                <h2>JPEG-2000 — The Modern Wavelet-Based Standard</h2>
+            </div>
+
+            <h3>Motivation</h3>
+
+            <p>JPEG has limitations:</p>
+            <ul>
+                <li>Blocking artifacts from 8×8 block DCT approach</li>
+                <li>Inefficient at very high compression</li>
+                <li>No region of interest capability</li>
+                <li>No scalability (cannot extract lower resolutions)</li>
+                <li>No lossless option</li>
+            </ul>
+
+            <p>In 2000, JPEG-2000 (JP2) addressed these by replacing DCT with wavelets.</p>
+
+            <div class="definition">
+                <div class="def-label">Definition — JPEG-2000</div>
+                <p>JPEG-2000 is a modern image compression standard based on the Discrete Wavelet Transform (DWT) instead of DCT. It divides the image into multiple frequency bands using wavelets, applies adaptive quantization to each band, and encodes the result using arithmetic coding. It offers superior compression, no blocking artifacts, optional lossless compression, and progressive decompression.</p>
+            </div>
+
+            <h3>Advantages of JPEG-2000 over JPEG</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>JPEG</th>
+                        <th>JPEG-2000</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Transform</td>
+                        <td>DCT (8×8 blocks)</td>
+                        <td>Wavelets (multi-scale)</td>
+                    </tr>
+                    <tr>
+                        <td>Compression ratio</td>
+                        <td>~20:1 to 50:1</td>
+                        <td>~30:1 to 100:1</td>
+                    </tr>
+                    <tr>
+                        <td>Blocking artifacts</td>
+                        <td>Yes, visible</td>
+                        <td>None</td>
+                    </tr>
+                    <tr>
+                        <td>Lossless option</td>
+                        <td>No</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Scalability</td>
+                        <td>No</td>
+                        <td>Yes — multiple resolutions in one file</td>
+                    </tr>
+                    <tr>
+                        <td>Region of Interest</td>
+                        <td>No</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Adoption</td>
+                        <td>Ubiquitous</td>
+                        <td>Limited (archival, medical)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Why JPEG-2000 Hasn't Replaced JPEG</h3>
+
+            <ul>
+                <li><strong>Patent issues:</strong> Some algorithms are patented, increasing licensing costs.</li>
+                <li><strong>Computational complexity:</strong> JPEG-2000 is slower, less suitable for consumer devices.</li>
+                <li><strong>Legacy investment:</strong> Decades of infrastructure and software built for JPEG.</li>
+                <li><strong>Marginal improvement:</strong> For typical quality (Q=80–90), visual improvement isn't dramatic.</li>
+                <li><strong>Industry inertia:</strong> Cameras and browsers default to JPEG.</li>
+            </ul>
+
+            <p><strong>Where JPEG-2000 is used:</strong> Medical imaging, satellite/aerospace imagery, digital cinema, and national digital libraries.</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2 style="border-bottom: 2px solid #eee; padding-bottom: 15px;">Key Takeaways and Summary</h2>
+
+            <div class="important">
+                <div class="important-label">Essential formulas and concepts for exams</div>
+                <ul style="margin-top: 10px;">
+                    <li><strong>Compression Ratio:</strong> CR = Uncompressed size / Compressed size</li>
+                    <li><strong>Shannon Entropy:</strong> H = −Σ P_i · log₂(P_i) bits/symbol = theoretical lower bound for lossless compression</li>
+                    <li><strong>Huffman Coding:</strong> Assigns shorter codes to frequent symbols, achieves CR ≈ 8/H</li>
+                    <li><strong>DCT:</strong> Frequency transform that concentrates energy in low-frequency coefficients</li>
+                    <li><strong>JPEG Pipeline:</strong> RGB→YCbCr → 4:2:0 chroma subsample → 8×8 block DCT → quantize → Huffman encode</li>
+                    <li><strong>Quantization:</strong> Quantized = round(DCT / Q_matrix), irreversibly discards high-frequency detail</li>
+                    <li><strong>JPEG-2000:</strong> Wavelets instead of DCT, lossless+lossy, progressive transmission, 30–100× compression</li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<%- include('../partials/header') %>
+<main class="pw-layout">
+  <section class="profile-hero">
+    <div class="profile-header">
+      
+      <div class="profile-info">
+        <h4><%= currentUser.email %></h4>
+        <p class="profile-role"><%= currentUser.role === 'admin' ? 'Admin Badge' : '📚 Student' %></p>
+        <p class="profile-joined">Member since <%= new Date(currentUser.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) %></p>
+      </div>
+    </div>
+    <% if (currentUser.cohort && currentUser.cohort.department) { %>
+      <div class="profile-cohort-badge">
+        <span class="cohort-label">Current Cohort</span>
+        <span class="cohort-badge"><%= currentUser.cohort.department.name %> • <%= currentUser.cohort.branch?.name %> • <%= currentUser.cohort.semester?.name %></span>
+      </div>
+    <% } %>
+  </section>
+
+  <div class="profile-grid">
+    <!-- Subscription Section -->
+    <section class="panel profile-section subscription-section" id="subscriptions">
+      <div class="section-header">
+        <h2>📅 Subscription Status</h2>
+      </div>
+      <% 
+        const now = new Date();
+        const isActive = currentUser.subscriptionExpiry && currentUser.subscriptionExpiry > now;
+        const daysLeft = isActive ? Math.ceil((currentUser.subscriptionExpiry - now) / (1000 * 60 * 60 * 24)) : 0;
+        const percentUsed = isActive ? Math.max(0, Math.min(100, ((30 - daysLeft) / 30) * 100)) : 0;
+      %>
+      <% if (isActive) { %>
+        <div class="subscription-card active">
+          <div class="subscription-status">
+            <span class="status-badge active">✓ ACTIVE</span>
+            <span class="renewal-badge">Auto-Renewable</span>
+          </div>
+          <div class="subscription-progress">
+            <p class="progress-label">Time remaining in your subscription</p>
+            <div class="progress-bar-container">
+              <div class="progress-bar" style="width: <%= 100 - percentUsed %>%"></div>
+            </div>
+            <p class="progress-text"><strong><%= daysLeft %> days</strong> remaining</p>
+          </div>
+          <div class="subscription-details">
+            <div class="detail-item">
+              <span class="detail-label">Expires on</span>
+              <span class="detail-value"><%= new Date(currentUser.subscriptionExpiry).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Plan</span>
+              <span class="detail-value">₹29/Month</span>
+            </div>
+          </div>
+          <a href="/subscription" class="btn btn-primary">Add More Days</a>
+        </div>
+      <% } else if (currentUser.subscriptionStart && !isActive) { %>
+        <div class="subscription-card expired">
+          <div class="subscription-status">
+            <span class="status-badge expired">✗ EXPIRED</span>
+          </div>
+          <p class="card-text">Your subscription ended</p>
+          <div class="subscription-details">
+            <div class="detail-item">
+              <span class="detail-label">Expired on</span>
+              <span class="detail-value"><%= new Date(currentUser.subscriptionExpiry).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+            </div>
+          </div>
+          <p class="card-subtext">Reactivate your subscription to continue accessing premium materials</p>
+          <a href="/subscription" class="btn btn-primary">Reactivate Now</a>
+        </div>
+      <% } else { %>
+        <div class="subscription-card inactive">
+          <div class="subscription-status">
+            <span class="status-badge inactive">⊖ NOT SUBSCRIBED</span>
+          </div>
+          <p class="card-text">You don't have an active subscription</p>
+          <div class="subscription-benefits">
+            <h4>✨ Premium Benefits</h4>
+            <ul>
+              <li>🔓 Unlimited access to all study materials</li>
+              <li>📥 Download materials for offline reading</li>
+              <li>📌 Save unlimited favorites</li>
+              <li>⚡ Priority support</li>
+            </ul>
+          </div>
+          <a href="/subscription" class="btn btn-primary">Start Subscription</a>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- Purchases Section -->
+    <section class="panel profile-section payment-section" id="purchases">
+      <div class="section-header">
+        <h2>🧾 Payment History</h2>
+      </div>
+      <% if (payments && payments.length > 0) { %>
+        <div class="payment-list">
+          <% payments.forEach((payment, index) => { %>
+            <div class="payment-item">
+              <div class="payment-icon">💳</div>
+              <div class="payment-info">
+                <div class="payment-top">
+                  <span class="payment-date"><%= new Date(payment.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                  <span class="payment-status <%= payment.status === 'paid' ? 'paid' : 'pending' %>"><%= payment.status === 'paid' ? '✓ Paid' : '⏳ Pending' %></span>
+                </div>
+                <span class="payment-id">Transaction ID: <%= payment.razorpayPaymentId.substring(0, 12) %>...</span>
+              </div>
+              <div class="payment-amount">₹<%= (payment.amount / 100).toFixed(2) %></div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <p>💰 No payments yet</p>
+          <p class="desc-text">Start your subscription to see payment history here</p>
+        </div>
+      <% } %>
+    </section>
+  </div>
+
+  <div class="profile-actions">
+    <a href="/materials" class="btn btn-secondary">← Back to Materials</a>
+  </div>
+</main>
+<%- include('../partials/footer') %>

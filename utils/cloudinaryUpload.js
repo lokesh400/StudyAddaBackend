@@ -5,10 +5,10 @@ const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
-  if (file.mimetype === 'application/pdf' || ext === '.pdf') {
+  if (file.mimetype === 'text/html' || ext === '.html') {
     return cb(null, true);
   }
-  cb(new Error('Only PDF files are allowed'));
+  cb(new Error('Only HTML files are allowed'));
 };
 
 module.exports = multer({

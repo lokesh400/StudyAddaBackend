@@ -90,26 +90,29 @@
       </section>
 
       <section id="upload" class="panel">
-        <h3>Upload PDF</h3>
-        <form method="POST" action="/admin/materials" enctype="multipart/form-data" class="grid-2">
-          <input name="title" placeholder="Module 1 Notes" required/>
+        <h3>Add Material</h3>
+        <p class="admin-subtitle">Enter material name and select branch/semester. HTML file should already exist in the content folder.</p>
+        <form method="POST" action="/admin/materials" class="grid-2">
+          <input name="title" placeholder="Material Name (e.g., DataStructures)" required/>
           <select name="branch" required>
+            <option value="">Select Branch</option>
             <% branches.forEach((b) => { %>
               <option value="<%= b._id %>"><%= b.name %></option>
             <% }) %>
           </select>
           <select name="semester" required>
+            <option value="">Select Semester</option>
             <% semesters.forEach((s) => { %>
               <option value="<%= s._id %>"><%= s.name %></option>
             <% }) %>
           </select>
           <select name="subject" required>
+            <option value="">Select Subject</option>
             <% subjects.forEach((s) => { %>
               <option value="<%= s._id %>"><%= s.name %></option>
             <% }) %>
           </select>
-          <input type="file" name="pdf" accept="application/pdf" required/>
-          <button type="submit">Upload PDF</button>
+          <button type="submit" style="grid-column: span 2">Add Material</button>
         </form>
       </section>
 

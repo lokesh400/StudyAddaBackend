@@ -55,9 +55,20 @@ router.post('/subscription/confirm', isLoggedIn, async (req, res, next) => {
 
     // Payment verified - update user subscription
     const now = new Date();
-    const expiry = new Date(now);
-    expiry.setMonth(expiry.getMonth() + 1);
-    req.user.subscriptionStart = now;
+    let expiry;
+    
+    // Check if user has active subscription
+    if (req.user.subscriptionExpiry && req.user.subscriptionExpiry > now) {
+      // Add 29 days to existing expiry
+      expiry = new Date(req.user.subscriptionExpiry);
+      expiry.setDate(expiry.getDate() + 29);
+    } else {
+      // Create new subscription from today
+      expiry = new Date(now);
+      expiry.setMonth(expiry.getMonth() + 1);
+      req.user.subscriptionStart = now;
+    }
+    
     req.user.subscriptionExpiry = expiry;
     await req.user.save();
 
@@ -84,5 +95,7 @@ router.post('/razorpay/webhook', express.json({ type: '*/*' }), async (req, res)
   res.json({ ok: true });
 });
 router.post('/logout', isLoggedIn, authController.logout);
+
+router.get('/profile', isLoggedIn, authController.profilePage);
 
 module.exports = router;

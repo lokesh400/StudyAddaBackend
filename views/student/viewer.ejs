@@ -11,18 +11,16 @@
       </div>
     </div>
     <div class="book-watermark"><%= watermark %></div>
-    <div class="pdfjs-shell book-frame">
-      <div class="pdfjs-toolbar">
-        <button type="button" class="btn ghost" id="prevPageBtn">Prev</button>
-        <span id="pageInfo" class="page-info">Loading document...</span>
-        <button type="button" class="btn ghost" id="nextPageBtn">Next</button>
-      </div>
-      <div class="pdfjs-canvas-wrap" id="pdfCanvasWrap">
-        <canvas id="pdfCanvas"></canvas>
-        <div id="pdfErrorBox" class="pdf-error-box" style="display:none;">
-          <p id="pdfErrorText">Unable to render document.</p>
-          <button type="button" class="btn" id="retryPdfBtn">Retry</button>
-        </div>
+    <div class="html-viewer-container book-frame">
+      <iframe 
+        id="htmlFrame" 
+        class="html-frame"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        frameborder="0">
+      </iframe>
+      <div id="htmlErrorBox" class="pdf-error-box" style="display:none;">
+        <p id="htmlErrorText">Unable to load material.</p>
+        <button type="button" class="btn" id="retryHtmlBtn">Retry</button>
       </div>
     </div>
     <div class="book-gloss" aria-hidden="true"></div>
@@ -30,6 +28,7 @@
 
   <p class="book-note">Security notice: This viewer blocks common shortcuts and uses expiring signed links. Absolute prevention of screenshots/camera capture is not technically possible on any web app.</p>
 </main>
+
 <script>
   document.body.classList.add('viewer-mode');
 
@@ -38,116 +37,62 @@
   const timerEl = document.getElementById('tokenTimer');
   const fullScreenBtn = document.getElementById('fullScreenBtn');
   const shell = document.getElementById('bookViewerShell');
-  const pdfCanvas = document.getElementById('pdfCanvas');
-  const pdfCanvasWrap = document.getElementById('pdfCanvasWrap');
-  const prevPageBtn = document.getElementById('prevPageBtn');
-  const nextPageBtn = document.getElementById('nextPageBtn');
-  const pageInfo = document.getElementById('pageInfo');
-  const pdfErrorBox = document.getElementById('pdfErrorBox');
-  const pdfErrorText = document.getElementById('pdfErrorText');
-  const retryPdfBtn = document.getElementById('retryPdfBtn');
-  let pdfDoc = null;
-  let currentPage = 1;
-  let rendering = false;
+  const htmlFrame = document.getElementById('htmlFrame');
+  const htmlErrorBox = document.getElementById('htmlErrorBox');
+  const htmlErrorText = document.getElementById('htmlErrorText');
+  const retryHtmlBtn = document.getElementById('retryHtmlBtn');
   let loadingStarted = false;
 
-  function showRenderError(message) {
-    pageInfo.textContent = 'Render error';
-    pdfCanvas.style.display = 'none';
-    pdfErrorBox.style.display = 'flex';
-    pdfErrorText.textContent = message || 'Unable to render PDF on this device.';
-    prevPageBtn.disabled = true;
-    nextPageBtn.disabled = true;
+  function showError(message) {
+    htmlFrame.style.display = 'none';
+    htmlErrorBox.style.display = 'flex';
+    htmlErrorText.textContent = message || 'Unable to load material on this device.';
   }
 
-  async function renderPage(pageNum) {
-    if (!pdfDoc || rendering) return;
-    rendering = true;
-    const page = await pdfDoc.getPage(pageNum);
-
-    const unscaledViewport = page.getViewport({ scale: 1 });
-    const availableWidth = Math.max(320, pdfCanvasWrap.clientWidth - 24);
-    const scale = availableWidth / unscaledViewport.width;
-    const viewport = page.getViewport({ scale });
-
-    const context = pdfCanvas.getContext('2d');
-    pdfCanvas.width = Math.floor(viewport.width);
-    pdfCanvas.height = Math.floor(viewport.height);
-
-    await page.render({ canvasContext: context, viewport }).promise;
-
-    currentPage = pageNum;
-    pageInfo.textContent = `Page ${currentPage} / ${pdfDoc.numPages}`;
-    prevPageBtn.disabled = currentPage <= 1;
-    nextPageBtn.disabled = currentPage >= pdfDoc.numPages;
-    rendering = false;
-  }
-
-  async function initPdf() {
+  async function loadHtml() {
     if (loadingStarted) return;
     loadingStarted = true;
-    pdfErrorBox.style.display = 'none';
-    pdfCanvas.style.display = 'block';
-    pageInfo.textContent = 'Loading document...';
+    htmlErrorBox.style.display = 'none';
+    htmlFrame.style.display = 'block';
 
     try {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js';
-      script.onload = async () => {
-        try {
-          if (!window.pdfjsLib) {
-            loadingStarted = false;
-            return showRenderError('Reader library unavailable.');
-          }
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js';
+      const response = await fetch('<%= secureFileUrl %>', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      
+      if (!response.ok) {
+        const errorBody = await response.text();
+        return showError(`Error (${response.status}): ${errorBody.slice(0, 150)}`);
+      }
 
-          // Mobile-safe path: fetch bytes first, then render from data.
-          const fileResponse = await fetch('<%= secureFileUrl %>', {
-            method: 'GET',
-            credentials: 'include',
-            cache: 'no-store'
-          });
-          if (!fileResponse.ok) {
-            throw new Error(`File request failed (${fileResponse.status})`);
-          }
-          const fileBytes = await fileResponse.arrayBuffer();
-          if (!fileBytes || fileBytes.byteLength === 0) {
-            throw new Error('Empty PDF response');
-          }
+      const htmlContent = await response.text();
+      
+      if (!htmlContent || htmlContent.length === 0) {
+        return showError('Empty material content');
+      }
 
-          const loadingTask = window.pdfjsLib.getDocument({
-            data: fileBytes,
-            disableRange: true,
-            disableStream: true,
-            disableAutoFetch: true
-          });
-          pdfDoc = await loadingTask.promise;
-          await renderPage(1);
-        } catch (err) {
-          showRenderError(`Could not render with PDF.js: ${err.message || 'Unknown error'}`);
-        } finally {
-          loadingStarted = false;
-        }
-      };
-      script.onerror = () => {
-        loadingStarted = false;
-        showRenderError('Could not load reader script.');
-      };
-      document.body.appendChild(script);
+      // Write HTML to iframe
+      const iframeDoc = htmlFrame.contentDocument || htmlFrame.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(htmlContent);
+      iframeDoc.close();
     } catch (err) {
+      showError(`Could not load material: ${err.message || 'Unknown error'}`);
+    } finally {
       loadingStarted = false;
-      showRenderError('Unable to open document right now.');
     }
   }
 
-  prevPageBtn.addEventListener('click', () => renderPage(Math.max(1, currentPage - 1)));
-  nextPageBtn.addEventListener('click', () => renderPage(Math.min(pdfDoc ? pdfDoc.numPages : 1, currentPage + 1)));
-  window.addEventListener('resize', () => { if (pdfDoc) renderPage(currentPage); });
-  retryPdfBtn.addEventListener('click', () => {
-    initPdf();
+  retryHtmlBtn.addEventListener('click', () => {
+    loadingStarted = false;
+    loadHtml();
   });
-  initPdf();
 
+  loadHtml();
+
+  // Token expiry countdown
   const ticker = setInterval(() => {
     const elapsed = Date.now() - start;
     const left = Math.max(0, tokenExpiryMs - elapsed);
@@ -157,6 +102,7 @@
     if (left === 0) clearInterval(ticker);
   }, 1000);
 
+  // Fullscreen toggle
   fullScreenBtn.addEventListener('click', async () => {
     if (!document.fullscreenElement) {
       await shell.requestFullscreen();
@@ -171,7 +117,7 @@
     fullScreenBtn.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
   });
 
-  // Extra deterrents on viewer page.
+  // Security deterrents
   document.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     if (k === 'printscreen') {

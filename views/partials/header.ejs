@@ -7,17 +7,35 @@
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
-  <nav>
-    <a href="/materials">StudyAdda</a>
-    <div>
+  <nav class="appbar">
+    <div class="appbar-brand">
+      <span class="appbar-logo">SA</span>
+      <div class="appbar-text">
+        <a class="appbar-title" href="/materials">StudyAdda</a>
+        <span class="appbar-subtitle">Smart notes hub</span>
+      </div>
+    </div>
+    <div class="appbar-actions">
       <% if (typeof currentUser !== 'undefined' && currentUser) { %>
-        <a href="/favorites">Favorites</a>
-        <% if (currentUser.role === 'admin') { %><a href="/admin">Admin</a><% } %>
-        <form action="/logout" method="POST" style="display:inline;"><button>Logout</button></form>
+        <% if (currentUser.role === 'admin') { %><a href="/admin" class="nav-link">Admin</a><% } %>
+        <div class="profile-menu">
+          <div class="profile-dropdown" id="profileDropdown">
+            <a href="/favorites" class="nav-link">Favorites</a>
+            <a href="/profile" class="dropdown-item">Profile</a>
+            <a href="/profile#subscriptions" class="dropdown-item">Subscriptions</a>
+            <a href="/profile#purchases" class="dropdown-item">Purchases</a>
+            <form action="/logout" method="POST" style="margin:0"><button class="dropdown-item logout-item">Logout</button></form>
+          </div>
+        </div>
       <% } else { %>
-        <a href="/login">Login</a>
+        <a href="/login" class="nav-link">Login</a>
       <% } %>
     </div>
+    <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+      <button class="hamburger" id="hamburgerBtn">
+        <span></span><span></span><span></span>
+      </button>
+    <% } %>
   </nav>
   <% if (typeof success !== 'undefined' && success && success.length) { %><p class="flash success"><%= success[0] %></p><% } %>
   <% if (typeof error !== 'undefined' && error && error.length) { %><p class="flash error"><%= error[0] %></p><% } %>

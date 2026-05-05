@@ -1,6 +1,5 @@
 const express = require('express');
 const adminController = require('../controllers/adminController');
-const upload = require('../utils/cloudinaryUpload');
 const { isLoggedIn, isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -8,7 +7,7 @@ router.use(isLoggedIn, isAdmin);
 
 router.get('/', adminController.dashboard);
 router.get('/materials', adminController.dashboard);
-router.post('/materials', upload.single('pdf'), adminController.uploadMaterial);
+router.post('/materials', adminController.uploadMaterial);
 router.delete('/materials/:id', adminController.deleteMaterial);
 
 router.post('/departments', adminController.createDepartment);

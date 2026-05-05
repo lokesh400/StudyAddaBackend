@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+<main class="pw-layout">
+
+  <section class="panel">
+    <% if (materials.length === 0) { %>
+      <div class="empty-state">
+        <p>No materials found</p>
+        <p class="desc-text">Try searching with different filters or select a subject</p>
+      </div>
+    <% } else { %>
+      <div class="materials-header">
+        <p class="material-count">Showing <%= materials.length %> material<%= materials.length !== 1 ? 's' : '' %></p>
+      </div>
+      <div class="cards">
+        <% materials.forEach(m => { %>
+          <article class="material-card">
+            <h3><%= m.title %></h3>
+            <div class="actions">
+              <a href="/materials/<%= m._id %>/read" class="btn">View</a>
+              <form method="POST" action="/materials/<%= m._id %>/favorite" style="display:inline">
+                <button class="btn ghost">♥ Favorite</button>
+              </form>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+</main>
+
+<script>
+// Hamburger menu
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const appbarActions = document.querySelector('.appbar-actions');
+const profileBtn = document.getElementById('profileBtn');
+const profileDropdown = document.getElementById('profileDropdown');
+
+if (hamburgerBtn) {
+  hamburgerBtn.addEventListener('click', () => {
+    appbarActions.classList.toggle('open');
+    if (appbarActions.classList.contains('open')) {
+      profileDropdown.classList.add('open');
+    } else {
+      profileDropdown.classList.remove('open');
+    }
+  });
+}
+
+if (profileBtn) {
+  profileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    profileDropdown.classList.toggle('open');
+  });
+
+  document.addEventListener('click', () => {
+    if (appbarActions && !appbarActions.classList.contains('open')) {
+      profileDropdown.classList.remove('open');
+    }
+  });
+}
+</script>
+<%- include('../partials/footer') %>

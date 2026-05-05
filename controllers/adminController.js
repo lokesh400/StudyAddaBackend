@@ -7,6 +7,8 @@ const Semester = require('../models/Semester');
 const Subject = require('../models/Subject');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
+const path = require('path');
+const fs = require('fs');
 
 module.exports.dashboard = async (req, res) => {
   const [materials, departments, branches, semesters, subjects] = await Promise.all([
@@ -44,14 +46,27 @@ module.exports.deleteSubject = async (req, res) => { await Subject.findByIdAndDe
 
 module.exports.uploadMaterial = async (req, res, next) => {
   try {
-    if (!req.file) { req.flash('error', 'PDF file is required'); return res.redirect('/admin/materials'); }
-    const uploadResult = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream({ resource_type: 'raw', type: 'private', folder: 'studyadda', format: 'pdf' }, (err, result) => (err ? reject(err) : resolve(result)));
-      streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
-    });
     const { title, subject, branch, semester } = req.body;
-    await Material.create({ title, subject, branch, semester, public_id: uploadResult.public_id });
-    req.flash('success', 'Material uploaded successfully.');
+
+    // Fetch department, branch, and semester names
+    const branchDoc = await Branch.findById(branch).populate('department');
+    const semesterDoc = await Semester.findById(semester);
+
+    if (!branchDoc || !semesterDoc) {
+      req.flash('error', 'Invalid branch or semester');
+      return res.redirect('/admin/materials');
+    }
+
+    const deptName = branchDoc.department.name;
+    const branchName = branchDoc.name;
+    const semesterName = semesterDoc.name;
+
+    // Construct file path: views/content/{Department}/{Branch}/{Semester}/{title}.html
+    const relativePath = path.join('content', deptName, branchName, semesterName, `${title}.html`);
+
+    // Create material record
+    await Material.create({ title, subject, branch, semester, filePath: relativePath });
+    req.flash('success', 'Material added successfully.');
     res.redirect('/admin/materials');
   } catch (err) { next(err); }
 };
@@ -60,9 +75,9 @@ module.exports.deleteMaterial = async (req, res, next) => {
   try {
     const material = await Material.findById(req.params.id);
     if (!material) { req.flash('error', 'Material not found'); return res.redirect('/admin/materials'); }
-    await cloudinary.uploader.destroy(material.public_id, { resource_type: 'raw', type: 'private' });
+    // Just delete the database record; the HTML file remains in the folder for potential reuse
     await Material.findByIdAndDelete(req.params.id);
-    req.flash('success', 'Material deleted successfully.');
+    req.flash('success', 'Material record deleted.');
     res.redirect('/admin/materials');
   } catch (err) { next(err); }
 };

@@ -1,46 +1,91 @@
 <%- include('../partials/header') %>
 <main class="pw-layout">
-  <section class="hero-card">
-    <h1>Your Cohort Dashboard</h1>
-    <p>Choose department, branch, semester and get subject-focused materials instantly.</p>
-    <form method="POST" action="/cohort" class="cohort-grid" id="cohortForm">
-      <select name="departmentId" id="departmentSelect" required>
-        <option value="">Select Department</option>
-        <% departments.forEach(d => { %><option value="<%= d._id %>" <%= cohort.department && String(cohort.department._id||cohort.department)===String(d._id) ? 'selected' : '' %>><%= d.name %></option><% }) %>
-      </select>
-      <select name="branchId" id="branchSelect" required><option value="">Select Branch</option></select>
-      <select name="semesterId" id="semesterSelect" required><option value="">Select Semester</option></select>
-      <button type="submit">Apply Cohort</button>
-    </form>
-  </section>
+  <!-- Cohort Selection Button -->
+  <div class="cohort-button-wrapper">
+    <% 
+      const cohortDisplay = cohort.department ? `${cohort.department.name} • ${cohort.branch?.name} • ${cohort.semester?.name}` : 'Select Your Cohort';
+    %>
+    <button class="cohort-selector-btn" id="cohortBtn">
+      <span class="cohort-icon">📚</span>
+      <span class="cohort-text"><%= cohortDisplay %></span>
+      <span class="cohort-arrow">▼</span>
+    </button>
+  </div>
 
-  <section class="panel">
-    <h2>Subjects in Your Cohort</h2>
-    <div class="chips"><% if (subjects.length===0) { %><span class="chip">No subjects found yet</span><% } %><% subjects.forEach(s => { %><span class="chip"><%= s.name %></span><% }) %></div>
-  </section>
-
-  <section class="panel">
-    <form method="GET" action="/materials" class="search-row">
-      <input name="q" placeholder="Search notes, titles" value="<%= filters.q %>" />
-      <select name="subject"><option value="">All Subjects</option><% subjects.forEach(s => { %><option value="<%= s._id %>" <%= String(filters.subject||'')===String(s._id) ? 'selected' : '' %>><%= s.name %></option><% }) %></select>
-      <button type="submit">Search</button>
-    </form>
-    <div class="cards">
-      <% materials.forEach(m => { %>
-        <article class="material-card">
-          <h3><%= m.title %></h3>
-          <p><%= m.subject?.name %> | <%= m.branch?.name %> | <%= m.semester?.name %></p>
-          <div class="actions">
-            <a href="/materials/<%= m._id %>/read" class="btn">View</a>
-            <form method="POST" action="/materials/<%= m._id %>/favorite"><button class="btn ghost">Favorite</button></form>
-          </div>
-        </article>
-      <% }) %>
+  <!-- Cohort Modal -->
+  <div class="modal" id="cohortModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Choose Your Cohort</h2>
+        <button class="modal-close" id="cohortModalClose">&times;</button>
+      </div>
+      <form method="POST" action="/cohort" class="cohort-modal-form" id="cohortForm">
+        <label class="field">
+          <span class="field-label">Department</span>
+          <select name="departmentId" id="departmentSelect" required>
+            <option value="">Select Department</option>
+            <% departments.forEach(d => { %><option value="<%= d._id %>" <%= cohort.department && String(cohort.department._id||cohort.department)===String(d._id) ? 'selected' : '' %>><%= d.name %></option><% }) %>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Branch</span>
+          <select name="branchId" id="branchSelect" required><option value="">Select Branch</option></select>
+        </label>
+        <label class="field">
+          <span class="field-label">Semester</span>
+          <select name="semesterId" id="semesterSelect" required><option value="">Select Semester</option></select>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" id="cohortCancel">Cancel</button>
+          <button type="submit" class="btn cohort-apply">Apply Cohort</button>
+        </div>
+      </form>
     </div>
+  </div>
+
+  <!-- Subjects Grid -->
+  <section class="panel">
+    <h2>📖 Subjects in Your Cohort</h2>
+    <% if (subjects.length === 0) { %>
+      <div class="empty-state">
+        <p>No subjects found</p>
+        <p class="desc-text">Please select a valid cohort to see subjects</p>
+      </div>
+    <% } else { %>
+      <div class="subjects-grid">
+        <% subjects.forEach(s => { %>
+          <div class="subject-card">
+            <div class="subject-header">
+              <h3><%= s.name %></h3>
+              <span class="subject-icon">📚</span>
+            </div>
+            <div class="subject-content">
+              <a href="/browse/<%= s._id %>" class="btn ghost">View Materials</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
   </section>
 </main>
+
 <script>
 (async function(){
+  // Cohort modal
+  const cohortBtn = document.getElementById('cohortBtn');
+  const cohortModal = document.getElementById('cohortModal');
+  const cohortModalClose = document.getElementById('cohortModalClose');
+  const cohortCancel = document.getElementById('cohortCancel');
+
+  cohortBtn.addEventListener('click', () => cohortModal.classList.add('open'));
+  cohortModalClose.addEventListener('click', () => cohortModal.classList.remove('open'));
+  cohortCancel.addEventListener('click', () => cohortModal.classList.remove('open'));
+
+  cohortModal.addEventListener('click', (e) => {
+    if (e.target === cohortModal) cohortModal.classList.remove('open');
+  });
+
+  // Cohort selection
   const dept = document.getElementById('departmentSelect');
   const branch = document.getElementById('branchSelect');
   const sem = document.getElementById('semesterSelect');
@@ -65,5 +110,36 @@
   branch.addEventListener('change', e => loadSemesters(e.target.value));
   if(dept.value) loadBranches(dept.value);
 })();
+
+// Hamburger menu
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const appbarActions = document.querySelector('.appbar-actions');
+const profileBtn = document.getElementById('profileBtn');
+const profileDropdown = document.getElementById('profileDropdown');
+
+if (hamburgerBtn) {
+  hamburgerBtn.addEventListener('click', () => {
+    appbarActions.classList.toggle('open');
+    if (appbarActions.classList.contains('open')) {
+      profileDropdown.classList.add('open');
+    } else {
+      profileDropdown.classList.remove('open');
+    }
+  });
+}
+
+if (profileBtn) {
+  profileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    profileDropdown.classList.toggle('open');
+  });
+
+  document.addEventListener('click', () => {
+    if (appbarActions && !appbarActions.classList.contains('open')) {
+      profileDropdown.classList.remove('open');
+    }
+  });
+}
 </script>
 <%- include('../partials/footer') %>
+
